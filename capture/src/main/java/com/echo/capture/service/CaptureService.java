@@ -8,12 +8,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -80,21 +81,34 @@ public class CaptureService {
             HttpHeaders requestHeaders,
             byte[] requestBody
     ) {
+        // Build full URL string to preserve special characters like : in path
+        String fullUrl = properties.backendBaseUrl() + url;
+        
         WebClient.RequestBodySpec spec = webClient
             .method(method)
-            .uri(url)
+            .uri(fullUrl)
             .headers(h -> requestHeaders.forEach((name, values) -> {
                 if (!isHopByHop(name)) {
                     h.addAll(name, values);
                 }
             }));
 
-        // exchangeToMono: do NOT use retrieve() — it throws on 4xx/5xx and hides the backend body
-        Mono<ProxyResponse> exchanged = requestBody.length > 0
-            ? spec.bodyValue(requestBody).exchangeToMono(this::clientResponseToProxy)
-            : spec.exchangeToMono(this::clientResponseToProxy);
+        // Use retrieve() with onStatus to handle all status codes without throwing exceptions
+        WebClient.ResponseSpec responseSpec = requestBody.length > 0
+            ? spec.bodyValue(requestBody).retrieve()
+            : spec.retrieve();
+        
+        Mono<ProxyResponse> response = responseSpec
+            .onStatus(status -> true, clientResponse -> Mono.empty()) // Don't throw on any status
+            .toEntity(byte[].class)
+            .map(entity -> {
+                HttpHeaders headers = new HttpHeaders();
+                entity.getHeaders().forEach(headers::addAll);
+                byte[] body = entity.getBody() != null ? entity.getBody() : new byte[0];
+                return new ProxyResponse(entity.getStatusCode().value(), headers, body);
+            });
 
-        return exchanged
+        return response
             .onErrorResume(WebClientResponseException.class, e -> Mono.fromCallable(() ->
                 new ProxyResponse(
                     e.getStatusCode().value(),
@@ -102,16 +116,6 @@ public class CaptureService {
                     e.getResponseBodyAsByteArray() != null ? e.getResponseBodyAsByteArray() : new byte[0]
                 )))
             .onErrorResume(e -> Mono.fromCallable(() -> transportErrorResponse(method, url, e)));
-    }
-
-    private Mono<ProxyResponse> clientResponseToProxy(ClientResponse response) {
-        return response.bodyToMono(byte[].class)
-            .defaultIfEmpty(new byte[0])
-            .map(body -> {
-                HttpHeaders headers = new HttpHeaders();
-                response.headers().asHttpHeaders().forEach(headers::addAll);
-                return new ProxyResponse(response.statusCode().value(), headers, body);
-            });
     }
 
     /**
@@ -223,7 +227,7 @@ public class CaptureService {
         return "connection".equals(lower) || "keep-alive".equals(lower)
             || "proxy-authenticate".equals(lower) || "proxy-authorization".equals(lower)
             || "te".equals(lower) || "trailers".equals(lower) || "transfer-encoding".equals(lower)
-            || "upgrade".equals(lower);
+            || "upgrade".equals(lower) || "host".equals(lower); // Host must be set by WebClient based on target URI
     }
 
     private static boolean isPrintable(byte[] bytes) {

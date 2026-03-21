@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
@@ -17,7 +18,11 @@ public class CaptureConfig {
 
     @Bean
     public WebClient webClient(WebClient.Builder builder, CaptureProperties props) {
-        WebClient.Builder b = builder.clone().baseUrl(props.backendBaseUrl());
+        // Don't set baseUrl - we'll build full URLs in the service to avoid encoding issues with :
+        DefaultUriBuilderFactory factory = new DefaultUriBuilderFactory();
+        factory.setEncodingMode(DefaultUriBuilderFactory.EncodingMode.NONE);
+        
+        WebClient.Builder b = builder.clone().uriBuilderFactory(factory);
         if (props.insecureSsl()) {
             try {
                 var sslContext = SslContextBuilder.forClient()

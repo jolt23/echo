@@ -12,7 +12,7 @@ services:
       CAPTURE_INSECURE_SSL: ${CAPTURE_INSECURE_SSL:-false}
       CAPTURES_DIR: /data/captures
     volumes:
-      - captures:/data/captures
+      - ./captures:/data/captures
 
   emitter:
     build:
@@ -26,7 +26,4 @@ services:
       CAPTURES_DIR: /data/captures
       WIREMOCK_PORT: "8090"
     volumes:
-      - captures:/data/captures
-
-volumes:
-  captures:
+      - ./captures:/data/captures
