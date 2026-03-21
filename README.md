@@ -1,5 +1,7 @@
 # Echo — API Mock Recording & Replay
 
+![CI](https://github.com/YOUR_USERNAME/echo/workflows/CI/badge.svg)
+
 A Spring Boot WebFlux application for **recording real API interactions** and **replaying them as mocks**. This enables you to capture live API request/response pairs and use them for testing, development, or offline work without dependencies on external services.
 
 ## Purpose
@@ -304,3 +306,15 @@ Use the **mvnw.sh** wrapper script to run Maven commands in Docker without insta
 ```
 
 The script automatically builds a dev image on first use and caches Maven dependencies in a Docker volume for faster subsequent runs.
+
+## Continuous Integration
+
+This project uses GitHub Actions for automated testing and validation. On every push or pull request, the CI pipeline:
+
+1. **Maven Build & Test** - Compiles code, runs unit and integration tests, uploads test results and JAR artifacts
+2. **Docker Build** - Builds both capture and emitter Docker images with caching for faster builds
+3. **Docker Compose Test** - Validates that both services start correctly and are accessible
+
+View the workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+
+The CI workflow ensures all changes are validated before merging, maintaining code quality and catching issues early.
