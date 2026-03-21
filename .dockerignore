@@ -1,0 +1,11 @@
+# Exclude build artifacts and IDE files from Docker build context
+target/
+.git/
+.gitignore
+.env.*
+*.md
+.vscode/
+.idea/
+*.iml
+.DS_Store
+captures/

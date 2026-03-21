@@ -289,3 +289,18 @@ You can manually edit these files to:
 - Create variations (copy and modify for different scenarios)
 
 See [WireMock documentation](http://wiremock.org/docs/stubbing/) for advanced matching and response templating.
+
+## Developing Without Local Maven/Java
+
+Use the **mvnw.sh** wrapper script to run Maven commands in Docker without installing Java or Maven locally.
+
+**Common commands:**
+```bash
+./mvnw.sh test                    # Run all tests
+./mvnw.sh test -pl capture        # Test specific module
+./mvnw.sh clean package           # Build JARs
+./mvnw.sh package -DskipTests     # Build without tests
+./mvnw.sh -it bash                # Interactive shell
+```
+
+The script automatically builds a dev image on first use and caches Maven dependencies in a Docker volume for faster subsequent runs.

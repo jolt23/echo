@@ -1,0 +1,19 @@
+# Development Dockerfile for building and testing without local Java/Maven installation
+FROM maven:3.9-eclipse-temurin-17
+
+WORKDIR /app
+
+# Copy pom files first for better caching
+COPY pom.xml .
+COPY capture/pom.xml capture/
+COPY emitter/pom.xml emitter/
+
+# Download dependencies (cached layer)
+RUN mvn dependency:go-offline -B || true
+
+# Copy source code
+COPY capture/src capture/src
+COPY emitter/src emitter/src
+
+# Default command runs tests
+CMD ["mvn", "test"]
