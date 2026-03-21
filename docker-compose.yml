@@ -1,0 +1,32 @@
+# Shared volume: WireMock mappings under captures/mappings/*.json
+services:
+  capture:
+    build:
+      context: .
+      dockerfile: capture/Dockerfile
+    image: echo-capture:latest
+    ports:
+      - "${CAPTURE_PORT:-9090}:9090"
+    environment:
+      BACKEND_BASE_URL: ${BACKEND_BASE_URL:-http://host.docker.internal:8080}
+      CAPTURE_INSECURE_SSL: ${CAPTURE_INSECURE_SSL:-false}
+      CAPTURES_DIR: /data/captures
+    volumes:
+      - captures:/data/captures
+
+  emitter:
+    build:
+      context: .
+      dockerfile: emitter/Dockerfile
+    image: echo-emitter:latest
+    ports:
+      - "${EMITTER_PORT:-9091}:9091"
+      - "${WIREMOCK_EXPOSE_PORT:-8090}:8090"
+    environment:
+      CAPTURES_DIR: /data/captures
+      WIREMOCK_PORT: "8090"
+    volumes:
+      - captures:/data/captures
+
+volumes:
+  captures:

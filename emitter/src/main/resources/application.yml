@@ -1,0 +1,13 @@
+server:
+  port: ${EMITTER_PORT:9091}
+
+spring:
+  application:
+    name: echo-emitter
+
+echo:
+  emitter:
+    captures-dir: ${CAPTURES_DIR:./captures}
+    wire-mock-port: ${WIREMOCK_PORT:8090}
+    # Optional: reload mappings from disk on this interval (ms). Omit to disable.
+    # reload-mappings-fixed-delay-ms: 30000

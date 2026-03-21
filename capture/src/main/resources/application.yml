@@ -1,0 +1,13 @@
+server:
+  port: ${CAPTURE_PORT:9090}
+
+spring:
+  application:
+    name: echo-capture
+
+echo:
+  capture:
+    backend-base-url: ${BACKEND_BASE_URL:http://localhost:8080}
+    captures-dir: ${CAPTURES_DIR:./captures}
+    # Dev only: trust any TLS cert for the backend (fixes corporate MITM / PKIX in containers)
+    insecure-ssl: ${CAPTURE_INSECURE_SSL:false}

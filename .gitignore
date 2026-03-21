@@ -1,0 +1,16 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.iml
+.idea/
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+*.log
+
+# Local overrides for Docker Compose (copy from .env.example)
+.env
+
+# Local capptures/*
